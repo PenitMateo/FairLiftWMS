@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>FairLift — Live Tracking</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+:root {
+  --accent: #3E5879;
+  --accent-dark: #5A7299;
+  --bg: #f4f4f4;
+  --text: #333;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  height: 100vh;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* Sidebar (same as Warehouse) */
+.sidebar {
+  width: 250px;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  padding: 25px 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.sidebar h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 30px;
+  letter-spacing: 1px;
+}
+
+/* Sidebar Links */
+.nav-link {
+  width: 85%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin: 6px 0;
+  text-decoration: none;
+  font-weight: 500;
+  transition: 0.25s;
+}
+.nav-link i { margin-right: 12px; font-size: 1.2rem; }
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(3px);
+}
+.nav-link.active {
+  background: #fff;
+  color: var(--accent);
+  font-weight: 600;
+}
+.spacer { flex-grow: 1; }
+
+/* Map */
+#map {
+  height: 100vh;
+  width: calc(100vw - 250px);
+  margin-left: 250px;
+}
+
+/* Floating Control Panel */
+.panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 360px;
+  background: rgba(255,255,255,0.96);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+  z-index: 1001;
+}
+.panel > * { margin-bottom: 12px; }
+.panel h3 {
+  color: var(--accent);
+  margin-top: 0;
+}
+.panel input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+.btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.25s;
+}
+.btn:hover { background: var(--accent-dark); }
+.btn.secondary { background: #555; }
+.btn.secondary:hover { background: #333; }
+.status-green { color: #28a745; font-weight: 700; }
+.status-yellow { color: #e6b800; font-weight: 700; }
+.status-red { color: #d9534f; font-weight: 700; }
+
+/* Overlay */
+.overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(3px);
+  display: none;
+  z-index: 2000;
+}
+.message-box {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  padding: 20px 28px;
+  width: 320px;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+.message-box h4 {
+  margin: 0 0 10px;
+  color: var(--accent);
+}
+.message-box p { font-size: 15px; color: #444; }
+.message-box button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  margin-top: 12px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.message-box button:hover { background: var(--accent-dark); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, -48%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.loading {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.9);
+  padding: 14px 22px;
+  border-radius: 10px;
+  display: none;
+  z-index: 2000;
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar identical to Warehouse (without logout) -->
+<nav class="sidebar">
+  <h2>FAIRLIFT</h2>
+  <a href="/static/driver-warehouse.html" class="nav-link"><i class="bi bi-box-seam"></i> Warehouse</a>
+  <a href="#" class="nav-link active"><i class="bi bi-truck"></i> Live Tracking</a>
+</nav>
+
+<!-- Map -->
+<div id="map"></div>
+
+<!-- Floating Panel -->
+<div class="panel">
+  <h3>Auto Tracker (🇵🇭)</h3>
+  <p>Track parcels from the Las Piñas warehouse to destinations.</p>
+
+  <input id="trackingInput" placeholder="e.g. FL-2025-001">
+
+  <div style="display:flex; gap:8px;">
+    <button id="trackBtn" class="btn">Track</button>
+    <button id="autoBtn" class="btn secondary">Auto-Load</button>
+  </div>
+
+  <div id="parcelCard" style="display:none; padding:12px; background:#f9f9f9; border-radius:10px;">
+    <h4 id="pn">Tracking: --</h4>
+    <div><strong>From:</strong> <span id="fromText">--</span></div>
+    <div><strong>To:</strong> <span id="toText">--</span></div>
+    <div style="margin-top:6px;"><strong>Status:</strong> <span id="statusText">--</span></div>
+  </div>
+
+  <hr>
+
+  <h4>Driver GPS Tracking</h4>
+  <div style="display:flex; gap:8px;">
+    <button id="startBtn" class="btn"><i class="bi bi-geo-alt-fill"></i> Start GPS</button>
+    <button id="endBtn" class="btn secondary" style="display:none;"><i class="bi bi-stop-circle"></i> Stop</button>
+  </div>
+
+  <div style="margin-top:6px; font-size:14px;">
+    <strong>Driver Location:</strong>
+    <div>Lat: <span id="driverLat">--</span>, Lng: <span id="driverLng">--</span></div>
+  </div>
+</div>
+
+<!-- Overlay -->
+<div id="overlay" class="overlay">
+  <div class="message-box">
+    <h4 id="msgTitle">Notice</h4>
+    <p id="msgText">Message goes here...</p>
+    <button onclick="closeMsg()">OK</button>
+  </div>
+</div>
+<div class="loading" id="loading">Loading route...</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const MAPTILER_KEY = "LYrqvcgKxgR314TOr230";
+const WAREHOUSE_ADDRESS = "Warehouse 51 Tionquiao St, Las Piñas, Philippines";
+
+const elements = {
+  trackingInput: document.getElementById('trackingInput'),
+  parcelCard: document.getElementById('parcelCard'),
+  pn: document.getElementById('pn'),
+  fromText: document.getElementById('fromText'),
+  toText: document.getElementById('toText'),
+  statusText: document.getElementById('statusText'),
+  startBtn: document.getElementById('startBtn'),
+  endBtn: document.getElementById('endBtn'),
+  overlay: document.getElementById('overlay'),
+  msgTitle: document.getElementById('msgTitle'),
+  msgText: document.getElementById('msgText'),
+  driverLat: document.getElementById('driverLat'),
+  driverLng: document.getElementById('driverLng'),
+  loading: document.getElementById('loading')
+};
+
+let map = L.map('map', { minZoom:5, maxBounds:[[4.4,116.0],[21.3,127.0]] }).setView([12.8797,121.7740],6);
+L.tileLayer(`https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`, {
+  attribution:'&copy; OpenStreetMap contributors | MapTiler', crossOrigin:true
+}).addTo(map);
+
+let routeLayer=null, markers=[], parcels=[], driverMarker=null, watchId=null, driverTrail=null, trailCoords=[];
+
+function showMsg(title,text){ elements.msgTitle.textContent=title; elements.msgText.textContent=text; elements.overlay.style.display='block'; }
+function closeMsg(){ elements.overlay.style.display='none'; }
+
+async function loadParcels(){
+  try{
+    const res = await fetch("/api/parcels", { credentials:'include' });
+    parcels = await res.json();
+  } catch(e){ showMsg("Error","Cannot load parcels."); }
+}
+
+async function getCoords(address){
+  const res = await fetch(`https://api.maptiler.com/geocoding/${encodeURIComponent(address+', Philippines')}.json?key=${MAPTILER_KEY}`);
+  const data = await res.json();
+  if(!data.features?.length) throw new Error("Address not found: "+address);
+  const [lng,lat] = data.features[0].geometry.coordinates;
+  return [lat,lng];
+}
+
+async function drawRoute(fromAddress,toAddress){
+  try{
+    elements.loading.style.display='block';
+    const [fromLat,fromLng] = await getCoords(fromAddress);
+    const [toLat,toLng] = await getCoords(toAddress);
+    const osrmUrl=`https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
+    const routeRes = await fetch(osrmUrl);
+    const routeData = await routeRes.json();
+
+    if(routeLayer) map.removeLayer(routeLayer);
+    markers.forEach(m=>map.removeLayer(m));
+    markers=[];
+
+    const routeGeo=routeData.routes?.[0]?.geometry;
+    if(routeGeo){
+      routeLayer=L.geoJSON(routeGeo,{style:{color:'#A3001E',weight:5}}).addTo(map);
+      map.fitBounds(routeLayer.getBounds(),{padding:[40,40]});
+    }
+
+    const fromMarker=L.marker([fromLat,fromLng]).addTo(map).bindPopup("🏭 FairLift Warehouse");
+    const toMarker=L.marker([toLat,toLng]).addTo(map).bindPopup("📍 Destination: "+toAddress);
+    markers.push(fromMarker,toMarker);
+  } catch(e){
+    console.error("Route error:",e);
+    showMsg("Route Error","Unable to draw route.");
+  } finally{
+    elements.loading.style.display='none';
+  }
+}
+
+function showParcel(p){
+  elements.parcelCard.style.display='block';
+  elements.pn.textContent='Tracking: '+p.tracking_number;
+  elements.fromText.textContent=WAREHOUSE_ADDRESS;
+  elements.toText.textContent=p.destination;
+  elements.statusText.textContent=p.status;
+  elements.statusText.className='';
+  const s = p.status.toLowerCase();
+  if(s.includes('delivered')) elements.statusText.classList.add('status-green');
+  else if(s.includes('in transit')) elements.statusText.classList.add('status-yellow');
+  else if(s.includes('delay')) elements.statusText.classList.add('status-red');
+  else elements.statusText.style.color='#333';
+}
+
+document.getElementById('trackBtn').addEventListener('click', async()=>{
+  const tn=elements.trackingInput.value.trim();
+  const p=parcels.find(x=>x.tracking_number===tn);
+  if(!p) return showMsg("Not Found","Parcel not found.");
+  showParcel(p);
+  await drawRoute(WAREHOUSE_ADDRESS,p.destination);
+});
+
+document.getElementById('autoBtn').addEventListener('click', async()=>{
+  if(!parcels.length) return showMsg("No Parcels","No parcels found.");
+  const p = parcels[0];
+  elements.trackingInput.value=p.tracking_number;
+  showParcel(p);
+  await drawRoute(WAREHOUSE_ADDRESS,p.destination);
+});
+
+elements.startBtn.onclick = ()=>{
+  if(!navigator.geolocation) return showMsg("GPS Error","GPS not supported.");
+  if(driverTrail) map.removeLayer(driverTrail);
+  driverTrail=null;
+  trailCoords=[];
+
+  watchId = navigator.geolocation.watchPosition(pos=>{
+    const {latitude,longitude}=pos.coords;
+    elements.driverLat.textContent = latitude.toFixed(6);
+    elements.driverLng.textContent = longitude.toFixed(6);
+
+    if(driverMarker) driverMarker.setLatLng([latitude,longitude]);
+    else driverMarker = L.marker([latitude,longitude]).addTo(map).bindPopup("🚚 Driver Location");
+
+    trailCoords.push([latitude,longitude]);
+    if(driverTrail) driverTrail.setLatLngs(trailCoords);
+    else driverTrail = L.polyline(trailCoords,{color:'#007bff',weight:4}).addTo(map);
+
+    map.setView([latitude,longitude],13);
+  }, err=>showMsg("GPS Error",err.message), { enableHighAccuracy:true });
+
+  elements.startBtn.style.display='none';
+  elements.endBtn.style.display='inline-block';
+};
+
+elements.endBtn.onclick = ()=>{
+  navigator.geolocation.clearWatch(watchId);
+  elements.startBtn.style.display='inline-block';
+  elements.endBtn.style.display='none';
+  showMsg("Tracking Stopped","Driver GPS tracking has been stopped.");
+};
+
+(async()=>{
+  try{
+    const [lat,lng]=await getCoords(WAREHOUSE_ADDRESS);
+    L.marker([lat,lng]).addTo(map).bindPopup("🏭 FairLift Warehouse — Las Piñas").openPopup();
+    map.setView([lat,lng],13);
+  } catch(e){ console.error(e); }
+})();
+
+loadParcels();
+</script>
+</body>
+</html>

@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FairLift — Add Parcel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://unpkg.com/html5-qrcode"></script>
+<style>
+:root {
+  --accent: #3E5879;
+  --accent-light: #5A7299;
+  --bg: #f8f9fa;
+  --card-bg: #fff;
+  --border: #dcdfe3;
+  --text: #333;
+  --text-muted: #666;
+  font-family: "Inter", sans-serif;
+}
+* { box-sizing: border-box; margin:0; padding:0; }
+body { display: flex; min-height: 100vh; background: var(--bg); color: var(--text); }
+.sidebar { width: 220px; background: var(--accent); color: #fff; display: flex; flex-direction: column; height: 100vh; position: fixed; top: 0; left: 0; padding: 25px 15px; box-shadow: 2px 0 10px rgba(0,0,0,0.12); transition: width 0.3s; }
+.sidebar h2 { font-size: 20px; font-weight: 700; margin-bottom: 30px; text-align: center; letter-spacing: 1px; }
+.nav-link { color: #fff; display: flex; align-items: center; padding: 12px 14px; border-radius: 8px; margin: 6px 0; font-weight: 500; text-decoration: none; transition: all 0.25s; }
+.nav-link i { margin-right: 10px; font-size: 1.2rem; }
+.nav-link:hover { background: rgba(255,255,255,0.15); transform: translateX(3px);}
+.nav-link.active { background: #fff; color: var(--accent); font-weight: 600; }
+.spacer { flex-grow:1; }
+.logout { display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; margin-top: 10px; background:#e74c3c; border-radius:8px; font-weight:600; cursor:pointer; transition:0.3s; }
+.logout:hover { background:#c0392b; }
+.main { margin-left: 220px; flex-grow: 1; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; background: var(--bg); }
+header { text-align:center; margin-bottom:30px; }
+header h1 { font-size:28px; color: var(--accent); font-weight:700; }
+.card { background: var(--card-bg); border-radius: 16px; padding: 30px 35px; width: 100%; max-width: 700px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); transition: all 0.3s; }
+.card:hover { box-shadow: 0 12px 30px rgba(0,0,0,0.12); }
+form { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 25px; }
+label { font-weight:600; font-size:14px; margin-bottom:6px; display:block; color: var(--text); }
+input, select { width: 100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; transition: all 0.2s; }
+input:focus, select:focus { border-color: var(--accent); outline:none; box-shadow:0 0 0 3px rgba(62,88,121,0.15); }
+.full-width { grid-column: span 2; }
+.hint { font-size:13px; color: var(--accent-light); margin-top:4px; background: #f4f6fa; border-left:3px solid var(--accent); padding:5px 8px; border-radius:4px; }
+.suggestion-box { background:#f4f6fa; border:1px dashed var(--border); border-radius:8px; padding:10px; font-size:14px; color: var(--text-muted); margin-top:4px; }
+.btn { grid-column: span 2; justify-self:center; background: var(--accent); color: #fff; border:none; padding:12px 22px; border-radius:8px; cursor:pointer; font-weight:600; font-size:15px; display:flex; align-items:center; gap:8px; transition:0.2s; }
+.btn:hover { background: var(--accent-light); transform: translateY(-1px); }
+footer { margin-top:30px; font-size:13px; color:var(--text-muted); }
+.modal-overlay { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); backdrop-filter: blur(4px); display:flex; justify-content:center; align-items:center; opacity:0; pointer-events:none; transition: opacity 0.3s ease; z-index:1000; }
+.modal-overlay.active { opacity:1; pointer-events:auto; }
+.modal { background:#fff; border-radius:16px; padding:30px 25px; max-width:360px; width:90%; text-align:center; box-shadow:0 8px 25px rgba(0,0,0,0.15); transform:translateY(20px); animation: fadeIn 0.3s ease forwards; }
+.modal h3 { color:var(--accent); font-size:18px; margin-bottom:10px; }
+.modal p { color: var(--text-muted); font-size:14px; }
+.modal button { margin-top:20px; background:var(--accent); color:#fff; border:none; padding:10px 16px; border-radius:8px; font-weight:600; cursor:pointer; transition:0.2s; }
+.modal button:hover { opacity:0.9; }
+@keyframes fadeIn { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+@media(max-width:768px) {
+  .sidebar { width:60px; padding:20px 6px; }
+  .sidebar h2 { display:none; }
+  .nav-link { justify-content:center; padding:10px 0; }
+  .nav-link i { margin:0; font-size:1.3rem; }
+  .nav-link span { display:none; }
+  .main { margin-left:60px; padding:20px; }
+  form { grid-template-columns:1fr; }
+  .full-width { grid-column:1; }
+}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <h2>FAIRLIFT</h2>
+  <a href="/static/DashBoard.html" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+  <a href="/static/Calendar.html" class="nav-link"><i class="bi bi-calendar3"></i> Calendar</a>
+  <a href="/static/warehouse.html" class="nav-link"><i class="bi bi-box-seam"></i> Warehouse</a>
+  <a href="/static/archived.html" class="nav-link"><i class="bi bi-archive"></i> Archived Parcels</a>
+  <a href="/static/tracking_live_auto.html" class="nav-link"><i class="bi bi-truck"></i> Live Tracking</a>
+  <a href="/static/add_parcel.html" class="nav-link active"><i class="bi bi-plus-circle"></i> Add Parcel</a>
+  <a href="/static/ManageVehicles.html" class="nav-link"><i class="bi bi-truck"></i><span> Manage Vehicles</span></a>
+  <a href="/static/settings.html" class="nav-link"><i class="bi bi-gear"></i> Settings</a>
+  <div class="spacer"></div>
+  <div class="logout" onclick="window.location.href='/static/Login.html'"><i class="bi bi-box-arrow-right"></i> Logout</div>
+</nav>
+
+<div class="main">
+  <header><h1>Add Parcel</h1></header>
+
+  <div class="card">
+    <form id="parcelForm">
+
+      <div class="full-width">
+        <label>Tracking Number</label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input name="tracking_number" id="tracking_number" placeholder="e.g. FL-2025-001" required>
+          <button type="button" id="scanBtn" style="padding:8px 12px; cursor:pointer;">📷 Scan</button>
+        </div>
+        <div id="scanner" style="margin-top:10px; display:none; width:100%; height:300px;"></div>
+      </div>
+
+      <div>
+        <label>Shipping Date</label>
+        <input name="shipping_date" type="date" required>
+      </div>
+
+      <div>
+        <label>Weight (kg)</label>
+        <input name="weight" type="number" step="0.01" id="weight" placeholder="Enter weight" required>
+        <div id="weightHint" class="hint" style="display:none;"></div>
+      </div>
+
+      <div>
+        <label>Size</label>
+        <select name="size" id="size" required>
+          <option value="">Select size</option>
+          <option value="small">Small</option>
+          <option value="medium">Medium</option>
+          <option value="large">Large</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Cargo Priority</label>
+        <select name="priority" id="priority" required>
+          <option value="normal">Normal Cargo</option>
+          <option value="priority">Priority Cargo</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Assigned Vehicle</label>
+        <select name="vehicle" id="vehicle" required>
+          <option value="">Select vehicle</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Destination</label>
+        <input name="destination" id="destination" placeholder="Enter destination">
+      </div>
+
+      <div>
+        <label>Status</label>
+        <input name="status" id="status" value="Stored" readonly>
+      </div>
+
+      <div class="full-width">
+        <label>Suggested Storage Rack</label>
+        <input name="location_rack" id="location_rack" placeholder="e.g. Rack A1">
+        <div class="suggestion-box" id="suggestion">No suggestion yet</div>
+      </div>
+
+      <div class="full-width" style="text-align:center; margin-top:15px;">
+        <button type="submit" class="btn"><i class="bi bi-save"></i> Save Parcel</button>
+      </div>
+
+    </form>
+  </div>
+
+  <footer>© 2025 FairLift International Logistics</footer>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>Parcel Added</h3>
+    <p>The parcel was successfully added to the warehouse.</p>
+    <button id="closeModal">OK</button>
+  </div>
+</div>
+
+<script>
+const weightInput = document.getElementById('weight');
+const sizeInput = document.getElementById('size');
+const priorityInput = document.getElementById('priority');
+const vehicleInput = document.getElementById('vehicle');
+const destInput = document.getElementById('destination');
+const weightHint = document.getElementById('weightHint');
+const modalOverlay = document.getElementById('modalOverlay');
+const closeModal = document.getElementById('closeModal');
+const scanBtn = document.getElementById('scanBtn');
+const scannerDiv = document.getElementById('scanner');
+const trackingInput = document.getElementById('tracking_number');
+
+let html5QrcodeScanner;
+let scanning = false;
+
+// --- Load vehicles from manage_vehicles.html (localStorage) ---
+let vehicles = JSON.parse(localStorage.getItem('vehicles')) || [];
+function populateVehicleSelect() {
+  vehicleInput.innerHTML = '<option value="">Select vehicle</option>';
+  vehicles.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.name;
+    opt.textContent = `${v.name} (Max ${v.maxWeight}kg)`;
+    vehicleInput.appendChild(opt);
+  });
+}
+populateVehicleSelect();
+
+// --- Auto assign vehicle based on weight ---
+function autoAssignVehicle() {
+  const weight = parseFloat(weightInput.value);
+  if(isNaN(weight) || vehicles.length===0) return;
+  const suitable = vehicles.filter(v=>weight<=v.maxWeight).sort((a,b)=>a.maxWeight-b.maxWeight);
+  vehicleInput.value = suitable.length ? suitable[0].name : '';
+}
+
+// --- Auto size selection ---
+function autoSelectSize() {
+  const weight = parseFloat(weightInput.value);
+  if(isNaN(weight)) return;
+  sizeInput.value = weight <= 5 ? 'small' : weight <= 15 ? 'medium' : 'large';
+  suggestRack();
+}
+
+// --- Suggest storage rack ---
+function suggestRack() {
+  const size = sizeInput.value;
+  const dest = destInput.value.trim().toUpperCase();
+  let suggestion = 'No suggestion yet';
+  let hint = '';
+  if(size){
+    const racks = { small:'Rack A', medium:'Rack B', large:'Rack C' };
+    const hints = { small:'≤5kg', medium:'5–15kg', large:'>15kg' };
+    suggestion = `Suggested: ${racks[size]}`;
+    if(dest) suggestion += ` — near ${dest} section.`;
+    hint = `Recommended: ${hints[size]}`;
+    weightHint.style.display='block';
+    weightHint.textContent = hint;
+  } else {
+    weightHint.style.display='none';
+  }
+  document.getElementById('suggestion').textContent = suggestion;
+  document.getElementById('location_rack').value = suggestion.replace('Suggested: ','');
+}
+
+// --- Event listeners ---
+weightInput.addEventListener('input', () => {
+  autoSelectSize();
+  autoAssignVehicle();
+});
+sizeInput.addEventListener('change', suggestRack);
+destInput.addEventListener('input', suggestRack);
+priorityInput.addEventListener('change', autoAssignVehicle);
+
+// --- QR Scanner ---
+scanBtn.addEventListener('click', async () => {
+  if (scanning) {
+    html5QrcodeScanner.stop().then(() => {
+      scanning = false;
+      scannerDiv.style.display = "none";
+    }).catch(console.error);
+    return;
+  }
+
+  scannerDiv.style.display = "block";
+
+  try {
+    const cameras = await Html5Qrcode.getCameras();
+    if (!cameras || cameras.length === 0) {
+      alert("No camera found!");
+      return;
+    }
+
+    html5QrcodeScanner = new Html5Qrcode("scanner");
+    scanning = true;
+
+    html5QrcodeScanner.start(
+      cameras[0].id,
+      { fps: 10, qrbox: 250 },
+      (decodedText, decodedResult) => {
+        trackingInput.value = decodedText;
+        priorityInput.value = decodedText.toUpperCase().includes('PRIORITY') ? 'priority' : 'normal';
+        if (decodedText.includes('|')) {
+          const parts = decodedText.split('|');
+          trackingInput.value = parts[0];
+          destInput.value = parts[1] || '';
+        }
+        if(weightInput.value) autoAssignVehicle();
+        autoSelectSize();
+        html5QrcodeScanner.stop().then(()=>{ scanning=false; scannerDiv.style.display="none"; }).catch(console.error);
+      },
+      (errorMessage) => { console.log("Scan error:", errorMessage); }
+    );
+  } catch (err) { console.error(err); alert("Camera initialization failed!"); }
+});
+
+// --- Form submit ---
+document.getElementById('parcelForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target));
+  data.status='stored';
+  const res = await fetch('/api/parcels',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    credentials:'include',
+    body:JSON.stringify(data)
+  });
+  const j = await res.json();
+  if(res.ok){
+    showModal();
+    e.target.reset();
+    weightHint.style.display='none';
+    document.getElementById('suggestion').textContent='No suggestion yet';
+  } else showModal('Error', j.error || 'Error adding parcel');
+});
+
+// --- Modal ---
+function showModal(title='Parcel Added', message='The parcel was successfully added to the warehouse.'){
+  modalOverlay.querySelector('h3').textContent = title;
+  modalOverlay.querySelector('p').textContent = message;
+  modalOverlay.classList.add('active');
+}
+closeModal.addEventListener('click',()=>modalOverlay.classList.remove('active'));
+</script>
+
+</body>
+</html>
