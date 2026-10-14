@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      background: #f4f6f7;
+    }
+
+    header {
+      background: url('fairliftt.png') no-repeat center center;
+      background-size: cover;
+      height: 150px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding-left: 20px;
+    }
+
+    .company-name {
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+      position: absolute;
+      left: 20px;
+    }
+
+    .home-btn {
+      background: #E74C3C;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      border-radius: 5px;
+      position: absolute;
+      right: 20px;
+      top: 10px;
+    }
+
+    .container {
+      display: flex;
+      height: calc(100vh - 150px);
+    }
+
+    /* Sidebar text-based style */
+    .sidebar {
+      width: 220px;
+      background: #fff;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      padding-top: 20px;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #A3001E;
+      margin-bottom: 20px;
+    }
+
+    .nav-link {
+      padding: 12px 20px;
+      text-decoration: none;
+      color: #333;
+      display: block;
+      font-size: 15px;
+      transition: 0.2s;
+    }
+
+    .nav-link:hover {
+      background: #f4f4f4;
+    }
+
+    .nav-link.active {
+      background: #f4f4f4;
+      font-weight: bold;
+    }
+
+    /* Dashboard content */
+    .dashboard {
+      flex-grow: 1;
+      padding: 30px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    .button-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .button-container button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .print-btn {
+      background: #3498DB;
+      color: white;
+    }
+
+    .download-btn {
+      background: #2ECC71;
+      color: white;
+    }
+
+    .charts-wrapper {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .chart-container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 300px;
+      width: 45%;
+      min-width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="company-name">FAIRLIFT INTERNATIONAL LOGISTICS, INC.</div>
+    <button class="home-btn" onclick="location.href='dashboard.html'">🏠</button>
+  </header>
+
+  <div class="container">
+    <!-- Sidebar (text style like screenshot) -->
+    <nav class="sidebar">
+      <h2>FAIRLIFT</h2>
+      <a href="dashboard.html" class="nav-link active">Dashboard</a>
+      <a href="calendar.html" class="nav-link">Calendar</a>
+      <a href="tracking-map.html" class="nav-link">Tracking</a>
+      <a href="order-details.php" class="nav-link">Orders</a>
+      <a href="reports.html" class="nav-link">Reports</a>
+      <a href="settings.html" class="nav-link">Settings</a>
+      <a href="help.html" class="nav-link">Help Center</a>
+    </nav>
+
+    <!-- Dashboard main content -->
+    <main class="dashboard" id="pdf-content">
+      <div class="button-container">
+        <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+        <button class="download-btn" onclick="downloadCharts()">⬇️ Download</button>
+      </div>
+      <div class="charts-wrapper">
+        <div class="chart-container">
+          <canvas id="packagesChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas id="inventoryChart"></canvas>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Chart 1
+    const packagesCtx = document.getElementById('packagesChart').getContext('2d');
+    const packagesChart = new Chart(packagesCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+        datasets: [{
+          label: 'Packages Delivered',
+          data: [12, 19, 3, 5, 2],
+          backgroundColor: '#3498DB'
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // Chart 2
+    const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
+    const inventoryChart = new Chart(inventoryCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['In Stock', 'Out for Delivery', 'Returned'],
+        datasets: [{
+          label: 'Inventory',
+          data: [300, 50, 20],
+          backgroundColor: ['#2ECC71', '#F1C40F', '#E74C3C']
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // PDF Download
+    function downloadCharts() {
+      const element = document.getElementById('pdf-content');
+      const opt = {
+        margin: 0.5,
+        filename: 'dashboard-report.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save();
+    }
+  </script>
+</body>
+</html>

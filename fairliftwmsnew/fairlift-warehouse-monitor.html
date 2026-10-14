@@ -1,0 +1,523 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>FairLift — Warehouse Monitoring</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0f1724; 
+      --card:#0b1220; 
+      --muted:#9aa4b2; 
+      --accent:#06b6d4;
+      --success:#10b981; 
+      --danger:#ef4444; 
+      --glass: rgba(255,255,255,0.03);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    html,body{
+      height:100%; margin:0;
+      background:linear-gradient(180deg,#071029 0%, #071827 100%);
+      color:#e6eef6; display:flex;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      width:220px;
+      background:var(--card);
+      color:var(--muted);
+      padding:20px;
+      border-right:1px solid rgba(255,255,255,0.08); /* subtle divider */
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+    .sidebar h2{
+      font-size:16px;
+      font-weight:700;
+      color:var(--accent);
+      margin-bottom:20px;
+    }
+    .sidebar a{
+      text-decoration:none;
+      color:var(--muted);
+      font-size:14px;
+      padding:6px 8px;
+      border-radius:6px;
+      transition:background 0.2s, color 0.2s;
+    }
+    .sidebar a:hover{
+      background:rgba(255,255,255,0.05);
+      color:#fff;
+    }
+
+    /* Main content */
+    .main{
+      flex:1;
+      padding:24px;
+      overflow-y:auto;
+    }
+
+    /* Existing styles */
+    .container{max-width:1200px; margin:0 auto; padding:24px;}
+    header{display:flex; align-items:center; justify-content:space-between; gap:16px;}
+    h1{margin:0; font-size:20px;}
+    p.lead{margin:4px 0 0; color:var(--muted); font-size:13px;}
+    .card{background:var(--card); border-radius:12px; padding:16px; box-shadow:0 6px 24px rgba(2,6,23,0.6); margin-top:20px;}
+    .controls{display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
+    .controls > *{background:var(--glass); border:1px solid rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; color:var(--muted);}
+    input[type="text"], select, input[type="date"]{background:transparent; border:0; color:var(--muted); outline:none; min-width:140px;}
+    button.btn{background:linear-gradient(90deg,var(--accent), #38bdf8); color:#021325; border:0; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;}
+    button.ghost{background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted); cursor:pointer; padding:8px 10px; border-radius:8px;}
+    table{width:100%; border-collapse:collapse; margin-top:12px; font-size:14px;}
+    th,td{padding:10px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.03); color:#d9e8f2;}
+    th{position:relative; cursor:pointer; user-select:none; color:var(--muted); font-weight:600;}
+    tr:hover{background:rgba(255,255,255,0.02);}
+    .badge{padding:4px 8px; border-radius:999px; font-size:12px; display:inline-block; color:#021325;}
+    .badge.stored{background:var(--accent); color:#021325;}
+    .modal{position:fixed; left:0; right:0; top:0; bottom:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:40;}
+    .modal.show{display:flex;}
+    .modal-card{width:760px; max-width:95%; background:linear-gradient(180deg,#041427,#062034); padding:18px; border-radius:12px; box-shadow:0 20px 60px rgba(2,6,23,0.6);}
+    .row{display:flex; gap:12px; flex-wrap:wrap;}
+    .col{flex:1;}
+    .muted{color:var(--muted); font-size:13px;}
+    .actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px;}
+    .small{font-size:13px;}
+    .table-actions{display:flex; gap:8px; align-items:center;}
+    .export-btn{background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.03); padding:6px 8px; border-radius:8px; cursor:pointer;}
+    footer{color:var(--muted); font-size:13px; text-align:center; margin-top:18px;}
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>FAIRLIFT</h2>
+    <a href="#">Dashboard</a>
+    <a href="#">Tracking</a>
+    <a href="#">Orders</a>
+    <a href="#">Reports</a>
+    <a href="#">Settings</a>
+    <a href="#">Help Center</a>
+  </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>FairLift — Warehouse Monitoring</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#06b6d4;
+      --success:#10b981; --danger:#ef4444; --glass: rgba(255,255,255,0.03);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%; margin:0; background:linear-gradient(180deg,#071029 0%, #071827 100%); color:#e6eef6;}
+    .container{max-width:1200px; margin:32px auto; padding:24px;}
+    header{display:flex; align-items:center; justify-content:space-between; gap:16px;}
+    h1{margin:0; font-size:20px;}
+    p.lead{margin:4px 0 0; color:var(--muted); font-size:13px;}
+    .card{background:var(--card); border-radius:12px; padding:16px; box-shadow:0 6px 24px rgba(2,6,23,0.6); margin-top:20px;}
+    .controls{display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
+    .controls > *{background:var(--glass); border:1px solid rgba(255,255,255,0.03); padding:8px 10px; border-radius:8px; color:var(--muted);}
+    input[type="text"], select, input[type="date"]{background:transparent; border:0; color:var(--muted); outline:none; min-width:140px;}
+    button.btn{background:linear-gradient(90deg,var(--accent), #38bdf8); color:#021325; border:0; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600;}
+    button.ghost{background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted); cursor:pointer; padding:8px 10px; border-radius:8px;}
+    table{width:100%; border-collapse:collapse; margin-top:12px; font-size:14px;}
+    th,td{padding:10px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.03); color:#d9e8f2;}
+    th{position:relative; cursor:pointer; user-select:none; color:var(--muted); font-weight:600;}
+    th .sort-ind{position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:11px; color:var(--muted);}
+    tr:hover{background:rgba(255,255,255,0.02);}
+    .badge{padding:4px 8px; border-radius:999px; font-size:12px; display:inline-block; color:#021325;}
+    .badge.small{background:#facc15;}
+    .badge.stored{background:var(--accent); color:#021325;}
+    .modal{position:fixed; left:0; right:0; top:0; bottom:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:40;}
+    .modal.show{display:flex;}
+    .modal-card{width:760px; max-width:95%; background:linear-gradient(180deg,#041427,#062034); padding:18px; border-radius:12px; box-shadow:0 20px 60px rgba(2,6,23,0.6);}
+    .row{display:flex; gap:12px; flex-wrap:wrap;}
+    .col{flex:1;}
+    .muted{color:var(--muted); font-size:13px;}
+    .actions{display:flex; gap:8px; justify-content:flex-end; margin-top:12px;}
+    .small{font-size:13px;}
+    .table-actions{display:flex; gap:8px; align-items:center;}
+    .export-btn{background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.03); padding:6px 8px; border-radius:8px; cursor:pointer;}
+    footer{color:var(--muted); font-size:13px; text-align:center; margin-top:18px;}
+    @media (max-width:720px){ .controls{flex-direction:column; align-items:stretch;} header{flex-direction:column; align-items:flex-start; gap:6px;} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>FairLift — Warehouse Monitoring</h1>
+        <p class="lead">View parcels, sort by size/date/destination, open details, and export lists.</p>
+      </div>
+      <div class="table-actions">
+        <button id="exportCsv" class="export-btn">Export CSV</button>
+        <button id="bulkPrint" class="ghost">Bulk Print Labels</button>
+        <button id="addParcelBtn" class="btn">Add Parcel</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="controls">
+        <div>
+          <label class="small muted">Search</label><br />
+          <input id="search" type="text" placeholder="tracking number, destination..." />
+        </div>
+
+        <div>
+          <label class="small muted">Size</label><br />
+          <select id="filterSize">
+            <option value="">All sizes</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="small muted">Destination</label><br />
+          <input id="filterDestination" type="text" placeholder="e.g., Manila" />
+        </div>
+
+        <div>
+          <label class="small muted">Arrival from</label><br />
+          <input id="dateFrom" type="date" />
+        </div>
+
+        <div>
+          <label class="small muted">to</label><br />
+          <input id="dateTo" type="date" />
+        </div>
+
+        <div>
+          <label class="small muted">Sort by</label><br />
+          <select id="sortField">
+            <option value="arrival_date">Arrival Date</option>
+            <option value="size">Size</option>
+            <option value="destination">Destination</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="small muted">Order</label><br />
+          <select id="sortOrder">
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
+        </div>
+
+        <div style="margin-left:auto">
+          <label class="small muted">Selected</label><br />
+          <span id="selectionCount" class="badge small">0</span>
+        </div>
+      </div>
+
+      <table id="parcelsTable" aria-label="Parcels table">
+        <thead>
+          <tr>
+            <th style="width:36px"><input id="selectAll" type="checkbox" /></th>
+            <th data-key="tracking_number">Tracking # <span class="sort-ind"></span></th>
+            <th data-key="size">Size <span class="sort-ind"></span></th>
+            <th data-key="weight">Weight (kg) <span class="sort-ind"></span></th>
+            <th data-key="arrival_date">Arrival Date <span class="sort-ind"></span></th>
+            <th data-key="destination">Destination <span class="sort-ind"></span></th>
+            <th data-key="status">Status <span class="sort-ind"></span></th>
+            <th>Location</th>
+            <th style="width:120px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- rows inserted by JS -->
+        </tbody>
+      </table>
+    </div>
+
+  <!-- detail modal -->
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h2 id="modalTitle" style="margin:0">Parcel details</h2>
+          <div class="muted small" id="modalSub">Tracking: —</div>
+        </div>
+        <div><button id="closeModal" class="ghost">Close</button></div>
+      </div>
+
+      <div style="margin-top:12px;" id="modalContent">
+        <div class="row">
+          <div class="col">
+            <div class="muted">Destination</div>
+            <div id="modalDestination" style="font-weight:600"></div>
+          </div>
+          <div class="col">
+            <div class="muted">Size</div>
+            <div id="modalSize"></div>
+          </div>
+          <div class="col">
+            <div class="muted">Weight</div>
+            <div id="modalWeight"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="row">
+          <div class="col">
+            <div class="muted">Arrival Date</div>
+            <div id="modalArrival"></div>
+          </div>
+          <div class="col">
+            <div class="muted">Location Rack</div>
+            <div id="modalRack"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="muted">Notes / Metadata</div>
+          <pre id="modalMeta" style="background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; color:var(--muted);"></pre>
+        </div>
+
+        <div class="actions">
+          <button id="createTicket" class="btn">Create Ticket</button>
+          <button id="markShipped" class="ghost">Mark Shipped</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sample data (in production this comes from /api/parcels)
+    const SAMPLE = [
+      { id:'1', tracking_number:'FL-0001', size:'S', weight:1.2, arrival_date:'2025-09-10', destination:'Manila', status:'stored', location_rack:'R1', metadata:{notes:'fragile'} },
+      { id:'2', tracking_number:'FL-0002', size:'L', weight:12.5, arrival_date:'2025-09-12', destination:'Cebu', status:'stored', location_rack:'R2', metadata:{notes:'heavy'} },
+      { id:'3', tracking_number:'FL-0003', size:'M', weight:4.1, arrival_date:'2025-09-15', destination:'Manila', status:'pending', location_rack:'R1', metadata:{notes:'insurance required'} },
+      { id:'4', tracking_number:'FL-0004', size:'XL', weight:25.0, arrival_date:'2025-09-17', destination:'Davao', status:'stored', location_rack:'R5', metadata:{notes:'oversize'} },
+      { id:'5', tracking_number:'FL-0005', size:'S', weight:0.5, arrival_date:'2025-09-18', destination:'Iloilo', status:'stored', location_rack:'R3', metadata:{notes:'documents only'} }
+    ];
+
+    let parcels = [...SAMPLE]; // working copy
+    const selectedIds = new Set();
+
+    // DOM refs
+    const tableBody = document.getElementById('tableBody');
+    const filterSize = document.getElementById('filterSize');
+    const filterDestination = document.getElementById('filterDestination');
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    const searchInput = document.getElementById('search');
+    const sortField = document.getElementById('sortField');
+    const sortOrder = document.getElementById('sortOrder');
+    const selectionCount = document.getElementById('selectionCount');
+    const selectAll = document.getElementById('selectAll');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSub = document.getElementById('modalSub');
+    const modalDestination = document.getElementById('modalDestination');
+    const modalSize = document.getElementById('modalSize');
+    const modalWeight = document.getElementById('modalWeight');
+    const modalArrival = document.getElementById('modalArrival');
+    const modalRack = document.getElementById('modalRack');
+    const modalMeta = document.getElementById('modalMeta');
+    const closeModal = document.getElementById('closeModal');
+    const exportCsvBtn = document.getElementById('exportCsv');
+
+    // Render table rows
+    function renderTable(){
+      // apply filters
+      const sText = (searchInput.value||'').toLowerCase();
+      const sizeVal = filterSize.value;
+      const destVal = (filterDestination.value||'').toLowerCase();
+      const from = dateFrom.value;
+      const to = dateTo.value;
+
+      let rows = parcels.filter(p => {
+        if(sizeVal && p.size !== sizeVal) return false;
+        if(destVal && !p.destination.toLowerCase().includes(destVal)) return false;
+        if(sText && !(`${p.tracking_number} ${p.destination} ${p.metadata?.notes||''}`).toLowerCase().includes(sText)) return false;
+        if(from && p.arrival_date < from) return false;
+        if(to && p.arrival_date > to) return false;
+        return true;
+      });
+
+      // sort
+      const sf = sortField.value;
+      const so = sortOrder.value;
+      rows.sort((a,b) => {
+        let A = a[sf], B = b[sf];
+        if(sf === 'arrival_date'){ A = new Date(A); B = new Date(B); }
+        if(A < B) return so === 'asc' ? -1 : 1;
+        if(A > B) return so === 'asc' ? 1 : -1;
+        return 0;
+      });
+
+      tableBody.innerHTML = '';
+      for(const p of rows){
+        const tr = document.createElement('tr');
+
+        const tdCheck = document.createElement('td');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = selectedIds.has(p.id);
+        cb.addEventListener('change', (e)=>{
+          if(cb.checked) selectedIds.add(p.id); else selectedIds.delete(p.id);
+          updateSelectionCount();
+        });
+        tdCheck.appendChild(cb);
+        tr.appendChild(tdCheck);
+
+        const addCell = (txt) => { const td = document.createElement('td'); td.textContent = txt; return td; };
+        tr.appendChild(addCell(p.tracking_number));
+        tr.appendChild(addCell(p.size));
+        tr.appendChild(addCell(String(p.weight)));
+        tr.appendChild(addCell(p.arrival_date));
+        tr.appendChild(addCell(p.destination));
+        const tdStatus = addCell('');
+        const badge = document.createElement('span');
+        badge.className = 'badge ' + (p.status === 'stored' ? 'stored' : '');
+        badge.textContent = p.status;
+        tdStatus.appendChild(badge);
+        tr.appendChild(tdStatus);
+        tr.appendChild(addCell(p.location_rack));
+
+        const tdActions = document.createElement('td');
+        const btnOpen = document.createElement('button');
+        btnOpen.className = 'ghost';
+        btnOpen.textContent = 'Open';
+        btnOpen.addEventListener('click', ()=>openModal(p));
+        tdActions.appendChild(btnOpen);
+
+        const btnTicket = document.createElement('button');
+        btnTicket.className = 'btn';
+        btnTicket.style.marginLeft = '8px';
+        btnTicket.textContent = 'Ticket';
+        btnTicket.addEventListener('click', ()=>createTicketFor(p));
+        tdActions.appendChild(btnTicket);
+
+        tr.appendChild(tdActions);
+        tableBody.appendChild(tr);
+      }
+    }
+
+    function updateSelectionCount(){ selectionCount.textContent = String(selectedIds.size); }
+
+    // modal functions
+    function openModal(parcel){
+      modalTitle.textContent = 'Parcel: ' + parcel.tracking_number;
+      modalSub.textContent = 'Tracking: ' + parcel.tracking_number;
+      modalDestination.textContent = parcel.destination;
+      modalSize.textContent = parcel.size;
+      modalWeight.textContent = parcel.weight + ' kg';
+      modalArrival.textContent = parcel.arrival_date;
+      modalRack.textContent = parcel.location_rack;
+      modalMeta.textContent = JSON.stringify(parcel.metadata || {}, null, 2);
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden','false');
+      // attach sample actions
+      document.getElementById('createTicket').onclick = ()=>createTicketFor(parcel);
+      document.getElementById('markShipped').onclick = ()=>markShipped(parcel);
+    }
+
+    function closeModalFunc(){
+      modal.classList.remove('show');
+      modal.setAttribute('aria-hidden','true');
+    }
+
+    closeModal.addEventListener('click', closeModalFunc);
+    modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModalFunc(); });
+
+    // small helpers for actions
+    function createTicketFor(parcel){
+      // In production: POST /api/tickets with department etc.
+      alert('Ticket created for ' + parcel.tracking_number + '\n(Prototype: no backend call)');
+      closeModalFunc();
+    }
+
+    function markShipped(parcel){
+      parcel.status = 'shipped';
+      alert(parcel.tracking_number + ' marked as shipped');
+      renderTable();
+      closeModalFunc();
+    }
+
+    // export selected or all visible to CSV
+    function exportCSV(){
+      // export currently filtered table
+      const rows = Array.from(tableBody.querySelectorAll('tr')).map(tr => {
+        const cells = tr.querySelectorAll('td');
+        return [
+          cells[1].textContent,
+          cells[2].textContent,
+          cells[3].textContent,
+          cells[4].textContent,
+          cells[5].textContent,
+          cells[6].textContent,
+          cells[7].textContent
+        ];
+      });
+      const header = ['tracking_number','size','weight','arrival_date','destination','status','location_rack'];
+      let csv = header.join(',') + '\n' + rows.map(r => r.map(c => `"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'parcels_export.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // create ticket placeholder
+    function createTicketForParcelById(id){
+      const p = parcels.find(x => x.id === id);
+      if(p) createTicketFor(p);
+    }
+
+    // mark selected as shipped (bulk)
+    function bulkMarkShipped(){
+      if(selectedIds.size === 0){ alert('Select parcels first'); return; }
+      [...selectedIds].forEach(id => {
+        const p = parcels.find(x=>x.id===id);
+        if(p) p.status = 'shipped';
+      });
+      selectedIds.clear();
+      updateSelectionCount();
+      renderTable();
+      alert('Marked selected parcels as shipped (prototype).');
+    }
+
+    // wire controls
+    [filterSize, filterDestination, dateFrom, dateTo, searchInput, sortField, sortOrder].forEach(el=>{
+      el.addEventListener('input', renderTable);
+      el.addEventListener('change', renderTable);
+    });
+    document.getElementById('addParcelBtn').addEventListener('click', ()=>{
+      // simple add demo
+      const id = String(Date.now());
+      const newP = { id, tracking_number:'FL-'+id.slice(-4), size:'M', weight:2.5, arrival_date:new Date().toISOString().slice(0,10), destination:'Newtown', status:'stored', location_rack:'R9', metadata:{notes:'added via UI'} };
+      parcels.unshift(newP); renderTable();
+    });
+    document.getElementById('bulkPrint').addEventListener('click', ()=>{ alert('Bulk print placeholder (prototype)'); });
+    document.getElementById('exportCsv').addEventListener('click', exportCSV);
+
+    selectAll.addEventListener('change', (e)=>{
+      const checked = selectAll.checked;
+      const visibleRows = tableBody.querySelectorAll('tr');
+      visibleRows.forEach((tr, idx) => {
+        const id = parcels[idx]?.id; // safe for prototype because rows map to filtered parcels
+        if(!id) return;
+        if(checked) selectedIds.add(id); else selectedIds.delete(id);
+      });
+      updateSelectionCount();
+      // re-render to update checkboxes properly
+      renderTable();
+    });
+
+    // initial render
+    renderTable();
+  </script>
+</body>
+</html>

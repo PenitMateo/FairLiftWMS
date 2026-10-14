@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FAIRLIFT Admin Login</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #fff;
+    }
+
+    .navbar {
+      background-color: #FA812F;
+      padding: 15px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: white;
+    }
+
+    .navbar img {
+      height: 40px;
+    }
+
+    .login-box {
+      max-width: 420px;
+      margin: 60px auto;
+      padding: 50px 40px;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      background-color: #fdfdfd;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    .login-box h2 {
+      color: #FA812F;
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .login-box label {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .login-box input[type="text"],
+    .login-box input[type="password"] {
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    .remember {
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+    }
+
+    .remember input {
+      margin-right: 8px;
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 14px;
+      background-color: #FA812F;
+      border: none;
+      color: #000;
+      font-weight: bold;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .login-box button:hover {
+      background-color: #e06f1c;
+    }
+
+    .footer {
+      background-color: #FA812F;
+      color: white;
+      text-align: center;
+      padding: 15px 10px;
+      margin-top: 60px;
+    }
+  </style>
+</head>
+<body onload="loadCredentials()">
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <img src="https://via.placeholder.com/150x40?text=FAIRLIFT+LOGO" alt="FairLift Logo">
+  </div>
+
+  <!-- Admin Login Box -->
+  <div class="login-box">
+    <h2>Account - FAIRLIFT</h2>
+    <form action="login.php" method="POST" onsubmit="saveCredentials()">
+      <label for="username">Username</label>
+      <input type="text" name="username" id="username" placeholder="Enter Admin Username" required />
+
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" placeholder="Enter Admin Password" required />
+
+      <div class="remember">
+        <input type="checkbox" id="remember">
+        <label for="remember">Remember</label>
+      </div>
+
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    &copy; 2025 FAIRLIFT INTERNATIONAL LOGISTICS INC.
+  </div>
+
+  <script>
+    function saveCredentials() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const remember = document.getElementById("remember").checked;
+
+      if (remember) {
+        localStorage.setItem("fairlift_username", username);
+        localStorage.setItem("fairlift_password", password);
+        localStorage.setItem("fairlift_remember", "true");
+      } else {
+        localStorage.removeItem("fairlift_username");
+        localStorage.removeItem("fairlift_password");
+        localStorage.setItem("fairlift_remember", "false");
+      }
+    }
+
+    function loadCredentials() {
+      const remember = localStorage.getItem("fairlift_remember") === "true";
+      if (remember) {
+        document.getElementById("username").value = localStorage.getItem("fairlift_username");
+        document.getElementById("password").value = localStorage.getItem("fairlift_password");
+        document.getElementById("remember").checked = true;
+      }
+    }
+  </script>
+
+</body>
+</html>
