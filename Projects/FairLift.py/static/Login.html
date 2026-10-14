@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>FairLift — Login</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --accent: #E9B63B;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Inter, sans-serif;
+      background: url("/static/fairliftbackground.webp") no-repeat center center / cover;
+      overflow: hidden;
+    }
+
+    .login-card {
+      width: 420px;
+      background: rgba(255, 255, 255, 0.35);
+      border-radius: 16px;
+      padding: 32px 28px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      animation: fadeIn 0.8s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo {
+      width: 150px;
+      height: auto;
+      margin-bottom: 18px;
+    }
+
+    h2 {
+      color: var(--accent);
+      margin-bottom: 22px;
+      font-weight: 700;
+      font-size: 1.6rem;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+      text-align: left;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .input-group {
+      position: relative;
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px 44px 10px 14px; /* more right padding for icon */
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      background: rgba(255, 255, 255, 0.25);
+      color: #000;
+      transition: all 0.2s;
+      box-sizing: border-box;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #222;
+      font-size: 1.2rem;
+      transition: color 0.2s;
+      user-select: none;
+    }
+
+    .toggle-password:hover {
+      color: var(--accent);
+    }
+
+    .remember-container {
+      display: flex;
+      align-items: center;
+      margin-top: 12px;
+      gap: 6px;
+      justify-content: flex-start;
+      color: #fff;
+    }
+
+    .remember-container input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .remember-container label {
+      margin: 0;
+      font-weight: 500;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    button {
+      margin-top: 18px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      font-size: 15px;
+      transition: background 0.3s, transform 0.1s;
+    }
+
+    button:hover {
+      background: #d1a232;
+      transform: scale(1.02);
+    }
+
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 24px 28px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      text-align: center;
+      z-index: 1000;
+      transition: transform 0.2s ease;
+    }
+
+    .modal.show {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .modal p {
+      margin: 0 0 12px;
+      font-size: 15px;
+      color: #333;
+    }
+
+    .modal button {
+      padding: 8px 16px;
+      font-size: 14px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    @media (max-width: 480px) {
+      .login-card {
+        width: 90%;
+        padding: 24px;
+      }
+      h2 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-card">
+    <img src="/static/Fairlift%20International%20logo.webp" alt="FairLift Logo" class="logo">
+    <h2>User Login</h2>
+    <form id="loginForm">
+      <label>Username</label>
+      <input type="text" id="username" required>
+
+      <label>Password</label>
+      <div class="input-group">
+        <input type="password" id="password" required>
+        <i class="bi bi-eye-slash toggle-password" id="togglePassword"></i>
+      </div>
+
+      <div class="remember-container">
+        <input type="checkbox" id="remember">
+        <label for="remember">Remember me</label>
+      </div>
+
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="alertModal">
+    <p id="alertMessage"></p>
+    <button onclick="closeModal()">OK</button>
+  </div>
+
+  <script>
+    const modal = document.getElementById('alertModal');
+    const alertMessage = document.getElementById('alertMessage');
+
+    function showModal(message) {
+      alertMessage.textContent = message;
+      modal.classList.add('show');
+    }
+
+    function closeModal() {
+      modal.classList.remove('show');
+    }
+
+    // Eye icon show/hide password toggle
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordField = document.getElementById('password');
+
+    togglePassword.addEventListener('click', () => {
+      const isVisible = passwordField.type === 'text';
+      passwordField.type = isVisible ? 'password' : 'text';
+      togglePassword.classList.toggle('bi-eye', !isVisible);
+      togglePassword.classList.toggle('bi-eye-slash', isVisible);
+    });
+
+    // Login handler
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const remember = document.getElementById('remember').checked;
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ username, password }),
+          credentials: 'include'
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.message) {
+          if (remember) {
+            localStorage.setItem("user", JSON.stringify(data));
+          } else {
+            sessionStorage.setItem("user", JSON.stringify(data));
+          }
+
+          if (data.role === "admin") {
+            window.location.href = '/static/DashBoard.html';
+          } else if (data.role === "driver") {
+            window.location.href = '/static/driver-dashboard.html';
+          } else {
+            showModal("Unknown user role. Please contact admin.");
+          }
+        } else {
+          showModal(data.error || 'Login failed');
+        }
+      } catch (err) {
+        showModal("Server error. Please try again.");
+      }
+    });
+  </script>
+</body>
+</html>

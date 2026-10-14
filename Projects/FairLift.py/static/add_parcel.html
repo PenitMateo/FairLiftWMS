@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FairLift — Add Parcel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+:root {
+  --accent: #3E5879;
+  --accent-light: #5A7299;
+  --bg: #f8f9fa;
+  --card-bg: #fff;
+  --border: #dcdfe3;
+  --text: #333;
+  --text-muted: #666;
+  font-family: "Inter", sans-serif;
+}
+* { box-sizing: border-box; margin:0; padding:0; }
+body { display: flex; min-height: 100vh; background: var(--bg); color: var(--text); }
+.sidebar { width: 220px; background: var(--accent); color: #fff; display: flex; flex-direction: column; height: 100vh; position: fixed; top: 0; left: 0; padding: 25px 15px; box-shadow: 2px 0 10px rgba(0,0,0,0.12); transition: width 0.3s; }
+.sidebar h2 { font-size: 20px; font-weight: 700; margin-bottom: 30px; text-align: center; letter-spacing: 1px; }
+.nav-link { color: #fff; display: flex; align-items: center; padding: 12px 14px; border-radius: 8px; margin: 6px 0; font-weight: 500; text-decoration: none; transition: all 0.25s; }
+.nav-link i { margin-right: 10px; font-size: 1.2rem; }
+.nav-link:hover { background: rgba(255,255,255,0.15); transform: translateX(3px);}
+.nav-link.active { background: #fff; color: var(--accent); font-weight: 600; }
+
+.spacer { flex-grow:1; }
+.logout { display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; margin-top: 10px; background:#e74c3c; border-radius:8px; font-weight:600; cursor:pointer; transition:0.3s; }
+.logout:hover { background:#c0392b; }
+
+.main { margin-left: 220px; flex-grow: 1; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; background: var(--bg); }
+
+header { text-align:center; margin-bottom:30px; }
+header h1 { font-size:28px; color: var(--accent); font-weight:700; }
+
+.card { background: var(--card-bg); border-radius: 16px; padding: 30px 35px; width: 100%; max-width: 900px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); transition: all 0.3s; }
+.card:hover { box-shadow: 0 12px 30px rgba(0,0,0,0.12); }
+
+form { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 25px; }
+
+label { font-weight:600; font-size:14px; margin-bottom:6px; display:block; color: var(--text); }
+
+input, select, textarea {
+  width: 100%; padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:8px; font-size:14px;
+  transition: all 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  outline:none;
+  box-shadow:0 0 0 3px rgba(62,88,121,0.12);
+}
+
+.full-width { grid-column: span 2; }
+
+.hint { font-size:13px; color: var(--accent-light); margin-top:4px;
+  background: #f4f6fa; border-left:3px solid var(--accent);
+  padding:5px 8px; border-radius:4px;
+}
+
+.suggestion-box {
+  background:#f4f6fa; border:1px dashed var(--border);
+  border-radius:8px; padding:10px; font-size:14px;
+  color: var(--text-muted); margin-top:4px;
+}
+
+.btn {
+  grid-column: span 2; justify-self:center;
+  background: var(--accent); color: #fff;
+  border:none; padding:12px 22px; border-radius:8px;
+  cursor:pointer; font-weight:600; font-size:15px;
+  display:flex; align-items:center; gap:8px;
+  transition:0.2s;
+}
+.btn:hover { background: var(--accent-light); transform: translateY(-1px); }
+
+footer { margin-top:30px; font-size:13px; color:var(--text-muted); }
+
+.autocomplete-container { position: relative; width: 100%; }
+.suggestions {
+  position: absolute; top: 100%; left: 0;
+  width: 100%; background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 0 0 8px 8px;
+  max-height: 280px; overflow-y: auto;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+  z-index: 40; display:none;
+}
+.suggestion-item {
+  padding: 10px 12px; cursor: pointer;
+  display:flex; gap:10px; align-items:flex-start;
+  border-bottom:1px solid #f0f0f0;
+}
+.suggestion-item:hover { background:#f4f6fa; }
+
+@media(max-width:900px) {
+  .card { padding:20px; }
+  form { grid-template-columns: 1fr; }
+  .full-width { grid-column: 1; }
+}
+@media(max-width:768px) {
+  .sidebar { width:60px; padding:20px 6px; }
+  .sidebar h2 { display:none; }
+  .nav-link { justify-content:center; padding:10px 0; }
+  .nav-link i { margin:0; font-size:1.3rem; }
+  .main { margin-left:60px; padding:20px; }
+}
+</style>
+</head>
+
+<body>
+<nav class="sidebar">
+  <h2>FAIRLIFT</h2>
+
+  <a href="/static/DashBoard.html" class="nav-link">
+    <i class="bi bi-speedometer2"></i> Dashboard</a>
+
+  <a href="/static/Calendar.html" class="nav-link">
+    <i class="bi bi-calendar3"></i> Calendar</a>
+
+  <a href="/static/warehouse.html" class="nav-link">
+    <i class="bi bi-box-seam"></i> Warehouse</a>
+
+  <a href="/static/archived.html" class="nav-link">
+    <i class="bi bi-archive"></i> Archived Parcels</a>
+
+  <a href="/static/tracking_live_auto.html" class="nav-link">
+    <i class="bi bi-truck"></i> Live Tracking</a>
+
+  <a href="/static/add_parcel.html" class="nav-link active">
+    <i class="bi bi-plus-circle"></i> Add Parcel</a>
+
+  <a href="/static/settings.html" class="nav-link">
+    <i class="bi bi-gear"></i> Settings</a>
+
+  <div class="spacer"></div>
+
+  <div class="logout" onclick="window.location.href='/static/Login.html'">
+    <i class="bi bi-box-arrow-right"></i> Logout
+  </div>
+</nav>
+
+<div class="main">
+  <header><h1>Add Parcel</h1></header>
+
+  <div class="card">
+    <form id="parcelForm">
+
+      <!-- TRACKING -->
+      <div class="full-width">
+        <label>Tracking Number</label>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <input name="tracking_number" id="tracking_number" placeholder="Scan or enter..." required>
+          <button type="button" id="scanBtn" style="
+            padding:8px 12px; border:none; border-radius:8px;
+            background:var(--accent); color:#fff; cursor:pointer;">
+            <i class="bi bi-camera"></i>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label>Shipping Date</label>
+        <input name="shipping_date" type="date" required>
+      </div>
+
+      <div>
+        <label>Weight (kg)</label>
+        <input name="weight" type="number" step="0.01" id="weight" placeholder="Enter weight" required>
+        <div id="weightHint" class="hint" style="display:none;"></div>
+      </div>
+
+      <!-- SIZE -->
+      <div>
+        <label>Size</label>
+        <select name="size" id="size" required>
+          <option value="">Select size</option>
+          <option value="small">Small</option>
+          <option value="medium">Medium</option>
+          <option value="large">Large</option>
+        </select>
+      </div>
+
+      <!-- NEW 3D VOLUME -->
+      <div>
+        <label>Volume</label>
+        <input id="volume3d" name="volume3d" placeholder="Auto" readonly>
+      </div>
+
+      <div>
+        <label>Cargo Priority</label>
+        <select name="priority" id="priority" required>
+          <option value="normal">Normal Cargo</option>
+          <option value="priority">Priority Cargo</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Assigned Vehicle</label>
+        <select name="vehicle" id="vehicle" required>
+          <option value="">Select vehicle</option>
+        </select>
+      </div>
+
+      <div class="full-width">
+        <label>Destination</label>
+        <div class="autocomplete-container">
+          <input name="destination" id="destinationInput" placeholder="Type city or province..." autocomplete="off" required>
+          <div id="destSuggestions" class="suggestions"></div>
+        </div>
+      </div>
+
+      <div>
+        <label>Status</label>
+        <input name="status" id="status" value="Stored" readonly>
+      </div>
+
+      <div class="full-width">
+        <label>Suggested Storage Rack</label>
+        <input name="location_rack" id="location_rack" placeholder="e.g. Rack A1">
+        <div class="suggestion-box" id="suggestion">No suggestion yet</div>
+      </div>
+
+      <div class="full-width" style="text-align:center; margin-top:15px;">
+        <button type="submit" class="btn"><i class="bi bi-save"></i> Save Parcel</button>
+      </div>
+
+    </form>
+  </div>
+
+  <footer>© 2025 FairLift International Logistics</footer>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="modalOverlay" style="display:none;">
+  <div class="modal">
+    <h3>Parcel Added</h3>
+    <p id="modalMsg"></p>
+    <button id="closeModal">OK</button>
+  </div>
+</div>
+
+<!-- SCANNER MODAL -->
+<div id="scannerModal" style="
+  display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+  
+  <div style="background:#fff; padding:20px; border-radius:12px;
+              width:90%; max-width:400px; text-align:center;">
+    <h3>Scan Tracking Number</h3>
+
+    <div id="reader" style="width:100%; margin-top:10px;"></div>
+
+    <button id="closeScanner" style="
+      margin-top:12px; padding:8px 16px; border:none; border-radius:8px;
+      background:#e74c3c; color:#fff; cursor:pointer;">
+      Close
+    </button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+/* GET ELEMENTS */
+const weightInput = document.getElementById('weight');
+const sizeInput = document.getElementById('size');
+const priorityInput = document.getElementById('priority');
+const vehicleInput = document.getElementById('vehicle');
+const destInput = document.getElementById('destinationInput');
+const weightHint = document.getElementById('weightHint');
+const modalOverlay = document.getElementById('modalOverlay');
+const closeModal = document.getElementById('closeModal');
+const suggestionBoxMain = document.getElementById('suggestion');
+const destSuggestions = document.getElementById('destSuggestions');
+const modalMsg = document.getElementById('modalMsg');
+const statusInput = document.getElementById("status");  // ⭐ NEW CODE
+
+/* LOAD VEHICLES */
+let vehicles = JSON.parse(localStorage.getItem('vehicles')) || [];
+
+function populateVehicleSelect() {
+  vehicleInput.innerHTML = '<option value="">Select vehicle</option>';
+  vehicles.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.name;
+    opt.textContent = `${v.name} (Max ${v.maxWeight}kg)`;
+    vehicleInput.appendChild(opt);
+  });
+}
+populateVehicleSelect();
+
+/* AUTO VEHICLE */
+function autoAssignVehicle() {
+  const weight = parseFloat(weightInput.value);
+  if (isNaN(weight)) return;
+  const suitable = vehicles.filter(v => weight <= v.maxWeight).sort((a,b)=>a.maxWeight-b.maxWeight);
+  vehicleInput.value = suitable.length ? suitable[0].name : '';
+}
+
+/* AUTO SIZE */
+function autoSelectSize() {
+  const w = parseFloat(weightInput.value);
+  if (isNaN(w)) return;
+  sizeInput.value = w <=5 ? "small" : w<=15 ? "medium" : "large";
+  suggestRack();
+}
+
+/* VOLUME LABEL */
+function update3DVolume() {
+  const size = sizeInput.value;
+  const volBox = document.getElementById('volume3d');
+
+  if (!size) {
+    volBox.value = "";
+    return;
+  }
+
+  const range = size === 'small' ? '≤5kg'
+              : size === 'medium' ? '5–15kg'
+              : '>15kg';
+
+  const volumeLabel =
+    size === "small" ? "Small Volume"
+    : size === "medium" ? "Medium Volume"
+    : "Large Volume";
+
+  volBox.value = `${volumeLabel} (${range})`;
+}
+
+/* RACK SUGGESTION */
+function suggestRack() {
+  const size = sizeInput.value;
+  const dest = destInput.value.trim().toUpperCase();
+  let suggestion = 'No suggestion yet';
+  let hint = '';
+
+  if (size) {
+    const racks = { small:'Rack A', medium:'Rack B', large:'Rack C' };
+    suggestion = `Suggested: ${racks[size]}${dest ? ' — near ' + dest + ' section.' : ''}`;
+    hint = size === 'small' ? '≤5kg' : size === 'medium' ? '5–15kg' : '>15kg';
+    weightHint.style.display = 'block';
+    weightHint.textContent = `Recommended: ${hint}`;
+  } else {
+    weightHint.style.display = 'none';
+  }
+
+  suggestionBoxMain.textContent = suggestion;
+  document.getElementById('location_rack').value = suggestion.replace('Suggested: ','');
+}
+
+/* ⭐ NEW — AUTO STATUS BASED ON PRIORITY */
+function updateStatusBasedOnPriority() {
+  if (priorityInput.value === "priority") {
+    statusInput.value = "Delivered";
+  } else {
+    statusInput.value = "Stored";
+  }
+}
+
+/* EVENT LISTENERS */
+weightInput.addEventListener('input', () => { 
+  autoSelectSize(); 
+  autoAssignVehicle(); 
+  update3DVolume(); 
+});
+
+sizeInput.addEventListener('change', () => {
+  suggestRack();
+  update3DVolume();
+});
+
+destInput.addEventListener('input', suggestRack);
+
+/* ⭐ PRIORITY CHANGE ALSO UPDATES STATUS */
+priorityInput.addEventListener('change', () => {
+  autoAssignVehicle();
+  updateStatusBasedOnPriority();  // ⭐ NEW CODE
+});
+
+/* FORM SUBMIT */
+document.getElementById('parcelForm').addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const dataObj = Object.fromEntries(new FormData(e.target));
+
+  /* ⭐ ENSURE STATUS IS CORRECT AT SAVE */
+  dataObj.status = priorityInput.value === "priority" ? "delivered" : "stored";  // ⭐ NEW CODE
+
+  try {
+    const res = await fetch('/api/parcels', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body:JSON.stringify(dataObj)
+    });
+
+    const j = await res.json();
+    showModal('Parcel Added', j.message || 'The parcel was successfully added.');
+
+    e.target.reset();
+    weightHint.style.display='none';
+    suggestionBoxMain.textContent='No suggestion yet';
+    document.getElementById('volume3d').value = "";
+    statusInput.value = "Stored"; // Reset
+
+  } catch (err) {
+    showModal('Error', 'Server unreachable — saved locally.');
+  }
+});
+
+function showModal(title, msg) {
+  modalOverlay.style.display='flex';
+  modalOverlay.querySelector('h3').textContent = title;
+  modalMsg.textContent = msg;
+}
+
+closeModal.addEventListener('click', ()=> modalOverlay.style.display='none');
+
+/* AUTOCOMPLETE */
+const phLocations = [
+  { city:"Manila", province:"Metro Manila", display:"Manila, Metro Manila, Philippines" },
+  { city:"Quezon City", province:"Metro Manila", display:"Quezon City, Metro Manila, Philippines" },
+  { city:"Taguig", province:"Metro Manila", display:"Taguig, Metro Manila, Philippines" },
+  { city:"Makati", province:"Metro Manila", display:"Makati, Metro Manila, Philippines" },
+  { city:"Baguio City", province:"Benguet", display:"Baguio City, Benguet, Philippines" },
+  { city:"Cebu City", province:"Cebu", display:"Cebu City, Cebu, Philippines" },
+  { city:"Davao City", province:"Davao del Sur", display:"Davao City, Davao del Sur, Philippines" }
+];
+
+destInput.addEventListener('input', () => {
+  const term = destInput.value.toLowerCase();
+  if (!term) return destSuggestions.style.display='none';
+
+  const matches = phLocations.filter(loc =>
+    loc.city.toLowerCase().includes(term) ||
+    loc.province.toLowerCase().includes(term)
+  );
+
+  destSuggestions.innerHTML = '';
+  matches.forEach(loc => {
+    const item = document.createElement('div');
+    item.className = 'suggestion-item';
+    item.textContent = loc.display;
+    item.onclick = () => {
+      destInput.value = loc.display;
+      destSuggestions.style.display='none';
+      suggestRack();
+    };
+    destSuggestions.appendChild(item);
+  });
+
+  destSuggestions.style.display = matches.length ? 'block' : 'none';
+});
+
+/* SCANNER */
+let html5Scanner;
+
+document.getElementById("scanBtn").addEventListener("click", () => {
+  document.getElementById("scannerModal").style.display = "flex";
+
+  html5Scanner = new Html5Qrcode("reader");
+
+  html5Scanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250, formatsToSupport: ["QR_CODE", "CODE_128", "EAN_13", "EAN_8"] },
+    decoded => {
+      document.getElementById("tracking_number").value = decoded;
+      stopScanner();
+    }
+  );
+});
+
+function stopScanner() {
+  if (html5Scanner) {
+    html5Scanner.stop().then(() => {
+      html5Scanner.clear();
+      document.getElementById("scannerModal").style.display = "none";
+    });
+  }
+}
+
+document.getElementById("closeScanner").addEventListener("click", stopScanner);
+</script>
+
+</body>
+</html>

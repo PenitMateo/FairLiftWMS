@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FairLift — Warehouse</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+:root { --accent:#3E5879; --accent-dark:#5A7299; --bg:#ffffff; --muted:#666; font-family:'Inter',sans-serif; }
+*{box-sizing:border-box;} body{margin:0;min-height:100vh;display:flex;font-family:'Inter',sans-serif;color:#333;background:var(--bg);}
+.sidebar{width:240px;background:var(--accent);color:#fff;display:flex;flex-direction:column;height:100vh;position:fixed;top:0;left:0;padding:24px 16px;box-shadow:3px 0 10px rgba(0,0,0,.12);z-index:1000;}
+.sidebar h2{font-size:20px;font-weight:700;margin-bottom:28px;text-align:center;}
+.nav-link{display:flex;align-items:center;color:#fff;padding:10px 12px;border-radius:8px;text-decoration:none;}
+.logout{background:#e74c3c;color:#fff;text-align:center;padding:10px;border-radius:8px;margin-top:12px;text-decoration:none;font-weight:600;}
+.main{margin-left:240px;flex-grow:1;display:flex;flex-direction:column;min-height:100vh;padding:0;}
+header{background:#fff;padding:20px 28px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:500;}
+header h1{margin:0;color:var(--accent);font-size:22px;font-weight:700;}
+.btn{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px;}
+.ghost{background:white;border:1px solid #ccc;color:#333;}
+.card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 3px 12px rgba(0,0,0,0.05);overflow-x:auto;margin:20px;}
+table{width:100%;border-collapse:collapse;min-width:900px;}
+th,td{padding:12px 10px;border-bottom:1px solid #eee;text-align:left;font-size:14px;}
+th{background:#f9f9f9;font-weight:600;color:#444;}
+.modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.modal-box{background:#fff;border-radius:16px;padding:22px;width:420px;box-shadow:0 6px 20px rgba(0,0,0,0.25);}
+.modal-box h3{color:var(--accent);font-size:19px;margin:0 0 12px;}
+.modal-box label{font-size:13px;color:#444;font-weight:500;}
+.modal-box input, .modal-box select, .modal-box textarea{width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #ddd;}
+.modal-actions{text-align:right;margin-top:12px;}
+#proofImage{width:100%;border-radius:10px;margin-top:10px;max-height:400px;object-fit:contain;}
+.footer{padding:14px;text-align:center;color:#777;border-top:1px solid #eee;}
+.hidden{display:none;}
+.small{font-size:13px;color:#666;}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <h2>FAIRLIFT</h2>
+  <a class="nav-link active"><i class="bi bi-box-seam"></i>&nbsp;&nbsp;Warehouse</a>
+  <div style="flex-grow:1"></div>
+  <a href="#" class="logout">Logout</a>
+</nav>
+
+<div class="main">
+  <header>
+    <div>
+      <h1>Warehouse Monitoring</h1>
+      <p class="small">View and manage stored parcels, verify delivery proofs.</p>
+    </div>
+    <div>
+      <input type="text" id="searchInput" placeholder="Search parcels..." style="padding:6px 10px;border-radius:6px;border:1px solid #ccc;">
+      <button class="btn" id="refreshBtn"><i class="bi bi-arrow-clockwise"></i></button>
+    </div>
+  </header>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Tracking #</th>
+          <th>Weight</th>
+          <th>Shipping Date</th>
+          <th>Destination</th>
+          <th>Status</th>
+          <th>Assigned Vehicle</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="footer">© 2025 FairLift International Logistics</div>
+</div>
+
+<!-- Photo Verification Modal -->
+<div id="photoModal" class="modal-bg hidden">
+  <div class="modal-box">
+    <h3>Delivery Photo Proof</h3>
+
+    <p style="margin:6px 0;"><strong>Receiver:</strong> <span id="proofReceiver">—</span></p>
+    <p style="margin:6px 0;"><strong>Delivered Time:</strong> <span id="proofTime">—</span></p>
+
+    <p style="margin:8px 0 6px;"><strong>Remarks</strong></p>
+    <div id="proofRemarks" style="background:#f5f5f5;padding:10px;border-radius:8px;min-height:40px;">—</div>
+
+    <img id="proofImage" src="" alt="Photo proof">
+
+    <div class="modal-actions" style="margin-top:12px;">
+      <button id="approveDeliveryBtn" class="btn" style="background:#28a745">Approve Delivery</button>
+      <button id="closePhotoBtn" class="btn ghost">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentParcels = [];
+
+// Helper show tiny modal message (reuses simple alert)
+function showMsg(text) {
+  alert(text);
+}
+
+// Load parcels from backend
+async function loadParcels() {
+  try {
+    const res = await fetch('/api/parcels', { credentials: 'include' });
+    currentParcels = await res.json();
+    renderTable(currentParcels);
+  } catch (err) {
+    console.error(err);
+    showMsg('Failed to load parcels');
+  }
+}
+
+function renderTable(items) {
+  const body = document.getElementById('tableBody');
+  body.innerHTML = '';
+  items.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${p.tracking_number || p.id}</td>
+      <td>${p.weight || ''}</td>
+      <td>${p.shipping_date || ''}</td>
+      <td>${p.destination || ''}</td>
+      <td>${p.status || ''}</td>
+      <td>${p.assigned_vehicle || ''}</td>
+      <td>
+        <button class="btn" style="background:#0078d7" onclick="openEdit(${JSON.stringify(p.id)})">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button class="btn" style="background:#28a745" onclick="viewProof('${p.id}')">
+          <i class="bi bi-image"></i>
+        </button>
+        <button class="btn" style="background:#d9534f" onclick="confirmDelete('${p.id}')">
+          <i class="bi bi-trash"></i>
+        </button>
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+// Placeholder openEdit
+function openEdit(id) {
+  showMsg('Edit parcel: ' + id);
+}
+
+async function confirmDelete(id) {
+  if (!confirm('Delete parcel ' + id + '?')) return;
+  try {
+    const res = await fetch(`/api/parcels/${id}`, { method: 'DELETE', credentials: 'include' });
+    if (res.ok) { showMsg('Deleted'); loadParcels(); }
+    else showMsg('Delete failed');
+  } catch {
+    showMsg('Delete failed');
+  }
+}
+
+// View photo proof
+async function viewProof(id) {
+  try {
+    const res = await fetch(`/api/parcels/${encodeURIComponent(id)}/verification`, { credentials: 'include' });
+    if (!res.ok) {
+      showMsg('No verification/proof found for this parcel.');
+      return;
+    }
+    const data = await res.json();
+
+    if (!data.photo_url) {
+      showMsg('No photo uploaded for this parcel.');
+      return;
+    }
+
+    document.getElementById('proofImage').src = data.photo_url;
+    document.getElementById('proofReceiver').textContent = data.receiver_name || 'N/A';
+    document.getElementById('proofTime').textContent = data.delivered_time || 'N/A';
+    document.getElementById('proofRemarks').textContent = data.remarks || 'No remarks';
+
+    // store id on approve button
+    const btn = document.getElementById('approveDeliveryBtn');
+    btn.setAttribute('data-id', id);
+
+    document.getElementById('photoModal').classList.remove('hidden');
+  } catch (err) {
+    console.error(err);
+    showMsg('Failed to fetch proof.');
+  }
+}
+
+document.getElementById('closePhotoBtn').onclick = () => {
+  document.getElementById('photoModal').classList.add('hidden');
+};
+
+// Approve delivery
+document.getElementById('approveDeliveryBtn').onclick = async () => {
+  const id = document.getElementById('approveDeliveryBtn').getAttribute('data-id');
+  if (!id) return showMsg('Missing parcel id');
+  if (!confirm('Approve delivery for parcel ' + id + '?')) return;
+
+  try {
+    const res = await fetch(`/api/parcels/${encodeURIComponent(id)}/approve_delivery`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    if (res.ok) {
+      showMsg('Delivery approved.');
+      document.getElementById('photoModal').classList.add('hidden');
+      loadParcels();
+    } else {
+      const j = await res.json().catch(()=>({error:'server'}));
+      showMsg('Approval failed: ' + (j.error || 'Server error'));
+    }
+  } catch (err) {
+    console.error(err);
+    showMsg('Approval failed, network error');
+  }
+};
+
+// Search & refresh
+document.getElementById('searchInput').addEventListener('input', function(){
+  const q = this.value.toLowerCase();
+  const filtered = currentParcels.filter(p =>
+    (p.tracking_number && p.tracking_number.toLowerCase().includes(q)) ||
+    (p.destination && p.destination.toLowerCase().includes(q)) ||
+    (p.status && p.status.toLowerCase().includes(q))
+  );
+  renderTable(filtered);
+});
+document.getElementById('refreshBtn').onclick = loadParcels;
+
+loadParcels();
+</script>
+</body>
+</html>

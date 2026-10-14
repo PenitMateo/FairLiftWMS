@@ -1,0 +1,473 @@
+<!doctype html> 
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>driver-warehouse</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --accent: #3E5879;
+      --accent-dark: #5A7299;
+      --bg: #ffffff;
+    }
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { margin: 0; display: flex; background: var(--bg); color: #222; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 230px;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding: 25px 15px;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+      z-index: 1000;
+    }
+    .sidebar h2 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+    .nav-link {
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin: 5px 0;
+      font-weight: 500;
+      text-decoration: none;
+      transition: 0.25s;
+    }
+    .nav-link i { margin-right: 12px; font-size: 1.1rem; }
+    .nav-link:hover { background: rgba(255,255,255,0.12); transform: translateX(3px); }
+    .nav-link.active { background: #fff; color: var(--accent); font-weight: 600; }
+    .spacer { flex-grow: 1; }
+
+    /* Logout Button */
+    .logout {
+      margin-bottom: 20px;
+      background: #e74c3c;
+      color: #fff;
+      text-align: center;
+      padding: 10px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: 0.2s;
+    }
+    .logout:hover { background: #c0392b; }
+
+    /* Main */
+    .main {
+      margin-left: 230px;
+      flex-grow: 1;
+      min-height: 100vh;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 20px 30px;
+      background: white;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { margin: 0; color: var(--accent); font-size: 20px; }
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px; border-bottom: 1px solid #eee; }
+    th { background: #f9f9f9; }
+
+    .btn {
+      background: var(--accent);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .ghost {
+      background: white;
+      border: 1px solid #ccc;
+      color: #333;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Modals */
+    #modal, #verifyModal {
+      display: none;
+      position: fixed;
+      left: 0; top: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .modal-box {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 400px;
+      max-width: 90%;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+
+    .modal-box h3 { margin: 0 0 15px; color: var(--accent); }
+
+    .modal-box input, .modal-box select, .modal-box textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      margin-top: 4px;
+      border-radius: 6px;
+    }
+
+    /* Message */
+    .message-box {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border: 2px solid var(--accent);
+      padding: 18px 25px;
+      border-radius: 12px;
+      color: #333;
+      font-size: 15px;
+      display: none;
+      z-index: 3000;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -45%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
+    img#imagePreview { 
+      display: block; 
+      margin-top:12px; 
+      width:100%; 
+      border-radius:8px; 
+      object-fit:cover;
+      max-height:200px;
+    }
+  </style>
+
+</head>
+<body>
+
+  <nav class="sidebar">
+    <h2>FAIRLIFT</h2>
+    <a class="nav-link active"><i class="bi bi-box-seam"></i> Warehouse</a>
+    <a href="/static/driver-dashboard.html" class="nav-link"><i class="bi bi-truck"></i> Live Tracking</a>
+    <div class="spacer"></div>
+    <a href="/static/Login.html" class="logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
+  </nav>
+
+  <div class="main">
+    <header>
+      <div>
+        <h1>Warehouse Monitoring</h1>
+        <p style="margin:0;color:#666;font-size:13px;">View and update parcel statuses.</p>
+      </div>
+    </header>
+
+    <div style="padding:24px;">
+      <div class="card">
+
+        <input type="text" id="searchInput"
+        placeholder="Search by Tracking #, Destination, or Status..."
+        style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #ccc; border-radius:6px;">
+
+        <table>
+          <thead>
+            <tr>
+              <th>Tracking #</th>
+              <th>Size</th>
+              <th>Weight</th>
+              <th>Shipping Date</th>
+              <th>Destination</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody id="tableBody"></tbody>
+        </table>
+
+      </div>
+    </div>
+
+    <footer style="text-align:center; color:#777; padding:10px; font-size:13px;">
+      © 2025 FairLift International Logistics
+    </footer>
+  </div>
+
+  <!-- Edit Status Modal -->
+  <div id="modal">
+    <div class="modal-box">
+      <h3>Edit Parcel</h3>
+
+      <input type="hidden" id="editId">
+
+      <label>Status</label>
+      <select id="editStatus">
+        <option value="pending">Pending</option>
+        <option value="delay">Delay</option>
+        <option value="shipped">Shipped</option>
+        <option value="delivered">Delivered</option>
+      </select>
+
+      <div class="modal-actions" style="margin-top:15px; text-align:right;">
+        <button class="ghost" id="closeModal">Cancel</button>
+        <button class="btn" id="saveChanges">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delivery Verification Modal -->
+  <div id="verifyModal">
+    <div class="modal-box">
+      <h3>Delivery Verification</h3>
+
+      <label>Receiver Name</label>
+      <input type="text" id="receiverName">
+
+      <label>Delivered Time</label>
+      <input type="datetime-local" id="deliveredTime">
+
+      <label>Remarks</label>
+      <textarea id="deliveryRemarks"></textarea>
+
+      <label>Photo Proof (required)</label>
+      <input type="file" id="deliveryImage" accept="image/*" capture="environment">
+
+      <!-- Default placeholder image -->
+      <img id="imagePreview" src="/static/no-image.png" alt="Photo Proof">
+
+      <div class="modal-actions" style="margin-top:15px; text-align:right;">
+        <button class="ghost" id="closeVerifyModal">Cancel</button>
+        <button class="btn" id="submitVerification">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="messageBox" class="message-box"></div>
+
+  <script>
+    const modal = document.getElementById("modal");
+    const verifyModal = document.getElementById("verifyModal");
+    const closeModalBtn = document.getElementById("closeModal");
+    const closeVerifyBtn = document.getElementById("closeVerifyModal");
+    const saveBtn = document.getElementById("saveChanges");
+    const submitVerification = document.getElementById("submitVerification");
+    const uploadInput = document.getElementById("deliveryImage");
+    const preview = document.getElementById("imagePreview");
+    const searchInput = document.getElementById("searchInput");
+    const messageBox = document.getElementById("messageBox");
+
+    function showMessage(text, duration = 2000) {
+      messageBox.textContent = text;
+      messageBox.style.display = "block";
+      setTimeout(() => messageBox.style.display = "none", duration);
+    }
+
+    closeModalBtn.onclick = () => modal.style.display = "none";
+
+    function resetDeliveryModal() {
+      document.getElementById("receiverName").value = "";
+      document.getElementById("deliveredTime").value = "";
+      document.getElementById("deliveryRemarks").value = "";
+      uploadInput.value = "";
+      preview.src = "/static/no-image.png";
+      preview.style.display = "block";
+    }
+
+    closeVerifyBtn.onclick = () => {
+      resetDeliveryModal();
+      verifyModal.style.display = "none";
+    };
+
+    window.onclick = e => {
+      if (e.target === modal) modal.style.display = "none";
+      if (e.target === verifyModal) {
+        resetDeliveryModal();
+        verifyModal.style.display = "none";
+      }
+    };
+
+    async function loadParcels() {
+      try {
+        const res = await fetch("/api/parcels", { credentials: 'include' });
+        const data = await res.json();
+        renderTable(data);
+      } catch {
+        showMessage("Failed to load parcels");
+      }
+    }
+
+    function renderTable(items) {
+      const body = document.getElementById("tableBody");
+      body.innerHTML = "";
+      items.filter(p => p.status !== "archived").forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${p.tracking_number || ""}</td>
+          <td>${p.size || ""}</td>
+          <td>${p.weight || ""}</td>
+          <td>${p.shipping_date || ""}</td>
+          <td>${p.destination || ""}</td>
+          <td>${p.status || ""}</td>
+          <td>
+            <button class="btn" onclick="openEdit(${p.id}, '${p.status}')">
+              <i class="bi bi-pencil"></i>
+            </button>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function openEdit(id, status) {
+      document.getElementById("editId").value = id;
+      document.getElementById("editStatus").value = status || "pending";
+      modal.style.display = "flex";
+    }
+
+    function openDeliveryModal(id) {
+      verifyModal.setAttribute("data-id", id);
+      resetDeliveryModal();
+      verifyModal.style.display = "flex";
+    }
+
+    saveBtn.onclick = () => {
+      const id = document.getElementById("editId").value;
+      const status = document.getElementById("editStatus").value;
+
+      if (status === "delivered") {
+        modal.style.display = "none";
+        openDeliveryModal(id);
+        return;
+      }
+
+      updateStatus(id, { status });
+    };
+
+    async function updateStatus(id, payload) {
+      const res = await fetch(`/api/parcels/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        showMessage("Updated Successfully!");
+        modal.style.display = "none";
+        loadParcels();
+      } else {
+        showMessage("Update Failed.");
+      }
+    }
+
+    // Image preview
+    uploadInput.onchange = () => {
+      const file = uploadInput.files[0];
+      if (!file) {
+        preview.src = "/static/no-image.png";
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        showMessage("⚠ Please select a valid image file.");
+        uploadInput.value = "";
+        preview.src = "/static/no-image.png";
+        return;
+      }
+
+      preview.src = URL.createObjectURL(file);
+    };
+
+    submitVerification.onclick = async () => {
+      const id = verifyModal.getAttribute("data-id");
+      const receiver = document.getElementById("receiverName").value.trim();
+      const time = document.getElementById("deliveredTime").value;
+      const remarks = document.getElementById("deliveryRemarks").value.trim();
+      const imageFile = uploadInput.files[0];
+
+      if (!receiver || !time) {
+        showMessage("⚠ Please complete all required fields");
+        return;
+      }
+      if (!imageFile) {
+        showMessage("📷 Photo proof is required!");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("receiver_name", receiver);
+      formData.append("delivered_time", time);
+      formData.append("remarks", remarks);
+      formData.append("photo", imageFile);
+
+      try {
+        const res = await fetch(`/api/parcels/${id}/verification`, {
+          method: "POST",
+          credentials: "include",
+          body: formData
+        });
+
+        if (res.ok) {
+          showMessage("📦 Delivery Verified!");
+          verifyModal.style.display = "none";
+          resetDeliveryModal();
+          loadParcels();
+        } else {
+          const err = await res.json();
+          showMessage(`❌ Verification Failed: ${err.error || "Server Error"}`);
+        }
+      } catch (e) {
+        showMessage("❌ Network Error: Could not submit verification");
+      }
+    };
+
+    searchInput.oninput = () => {
+      const q = searchInput.value.toLowerCase();
+      document.querySelectorAll("#tableBody tr").forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none";
+      });
+    };
+
+    loadParcels();
+  </script>
+
+</body>
+</html>

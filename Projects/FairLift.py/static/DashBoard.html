@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>FairLift — Dashboard</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- html2pdf.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    :root {
+      --accent: #3E5879;
+      --bg: #ffffff;
+      --card: #f8f9fb;
+      --muted: #666;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { display: flex; min-height: 100vh; background: var(--bg); font-family: "Inter", system-ui, sans-serif; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: var(--accent);
+      color: #fff;
+      position: fixed;
+      height: 100vh;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 3px 0 10px rgba(0,0,0,.12);
+    }
+    .sidebar h2 { font-size: 20px; text-align: center; margin-bottom: 20px; }
+    .nav-items { display: flex; flex-direction: column; flex-grow:1; }
+    .nav-link { display: flex; align-items: center; color: #fff; padding: 10px; border-radius: 8px; text-decoration: none; margin: 6px 0; font-weight: 500; transition: 0.3s; }
+    .nav-link:hover { background: rgba(255,255,255,0.1); }
+    .nav-link i { margin-right: 10px; }
+    .nav-link.active { background: #fff; color: var(--accent); font-weight: 600; }
+    .logout { background: #e74c3c; color: #fff; text-align: center; padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; font-weight: 600; margin-top: 12px; }
+    .logout:hover { background: #c0392b; }
+
+    /* Main content */
+    .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
+    header { background: #fff; padding: 18px 26px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { color: var(--accent); font-size: 18px; }
+    .btn { background: var(--accent); color: #fff; padding: 8px 12px; border-radius: 8px; border: 0; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+    /* Stats grid */
+    #reportContent { display: flex; flex-direction: column; gap: 18px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 16px; padding: 0 22px; page-break-inside: avoid; }
+    .stat-card { background: #fff; border-radius: 12px; padding: 18px; text-align: center; border-left: 6px solid var(--accent); box-shadow: 0 3px 10px rgba(0,0,0,.06); transition: 0.3s; }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(0,0,0,.08); }
+    .stat-image { width: 50px; height: 50px; object-fit: contain; margin-bottom: 10px; }
+    .stat-label { color: #444; margin-bottom: 6px; font-weight: 600; }
+    .stat-value { font-size: 26px; font-weight: 700; color: var(--accent); }
+
+    /* Cards for charts */
+    .card { background: var(--card); border-radius: 12px; padding: 18px; margin: 0 22px; box-shadow: 0 3px 10px rgba(0,0,0,.04); page-break-inside: avoid; }
+    .card h3 { color: var(--accent); margin-bottom: 10px; }
+    .chart-container { position: relative; height: 360px; width: 100%; }
+    canvas { display: block; width: 100% !important; height: 100% !important; }
+
+    /* Footer */
+    footer { text-align: center; color: #888; padding: 14px; border-top: 1px solid #eee; background: #fff; margin-top: auto; }
+  </style>
+</head>
+<body>
+  <nav class="sidebar">
+    <h2>FAIRLIFT</h2>
+    <div class="nav-items">
+      <a href="/static/DashBoard.html" class="nav-link active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="/static/Calendar.html" class="nav-link"><i class="bi bi-calendar3"></i> Calendar</a>
+      <a href="/static/warehouse.html" class="nav-link"><i class="bi bi-box-seam"></i> Warehouse</a>
+      <a href="/static/archived.html" class="nav-link"><i class="bi bi-archive"></i> Archived Parcels</a>
+      <a href="/static/tracking_live_auto.html" class="nav-link"><i class="bi bi-truck"></i> Live Tracking</a>
+      <a href="/static/add_parcel.html" class="nav-link"><i class="bi bi-plus-circle"></i> Add Parcel</a>
+      <a href="/static/settings.html" class="nav-link"><i class="bi bi-gear"></i> Settings</a>
+    </div>
+    <a href="/static/Login.html" class="logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
+  </nav>
+
+  <div class="main">
+    <header>
+      <h1>Warehouse Dashboard</h1>
+      <button class="btn" id="downloadPDF"><i class="bi bi-file-earmark-pdf"></i> Download PDF</button>
+    </header>
+
+    <div id="reportContent">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <img src="/static/parcel.webp" alt="Total Parcels" class="stat-image">
+          <div class="stat-label">Total Parcels</div>
+          <div class="stat-value" id="totalParcels">0</div>
+        </div>
+        <div class="stat-card">
+          <img src="/static/stored.webp" alt="Stored" class="stat-image">
+          <div class="stat-label">Stored</div>
+          <div class="stat-value" id="storedParcels">0</div>
+        </div>
+        <div class="stat-card">
+          <img src="/static/pending.webp" alt="Pending" class="stat-image">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value" id="pendingParcels">0</div>
+        </div>
+        <div class="stat-card">
+          <img src="/static/fast-delivery.webp" alt="Shipped" class="stat-image">
+          <div class="stat-label">Shipped</div>
+          <div class="stat-value" id="shippedParcels">0</div>
+        </div>
+        <div class="stat-card">
+          <img src="/static/restaurant.webp" alt="Delay" class="stat-image">
+          <div class="stat-label">Delay</div>
+          <div class="stat-value" id="delayedParcels">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Parcels by Status</h3>
+        <div class="chart-container"><canvas id="statusBarChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h3>Parcels by Size</h3>
+        <div class="chart-container"><canvas id="sizeBarChart"></canvas></div>
+      </div>
+    </div>
+
+    <footer>© 2025 FairLift International Logistics</footer>
+  </div>
+
+  <script>
+    let statusChart, sizeChart;
+
+    function buildStatusCounts(parcels) {
+      const keys = ['stored','pending','shipped','delay'];
+      const counts = Object.fromEntries(keys.map(k => [k,0]));
+      for (const p of parcels) {
+        const s = (p.status||'').toLowerCase();
+        if (counts.hasOwnProperty(s)) counts[s]++;
+      }
+      return counts;
+    }
+
+    function buildSizeCounts(parcels) {
+      const counts = {};
+      for (const p of parcels) {
+        const s = p.size || 'Unknown';
+        counts[s] = (counts[s]||0)+1;
+      }
+      if (Object.keys(counts).length === 0) return {Small:0,Medium:0,Large:0,XL:0};
+      return counts;
+    }
+
+    async function fetchAndRender() {
+      try {
+        const res = await fetch('/api/parcels');
+        const parcels = await res.json();
+
+        const total = parcels.length;
+        const statusCounts = buildStatusCounts(parcels);
+        const sizeCounts = buildSizeCounts(parcels);
+
+        document.getElementById('totalParcels').textContent = total;
+        document.getElementById('storedParcels').textContent = statusCounts.stored;
+        document.getElementById('pendingParcels').textContent = statusCounts.pending;
+        document.getElementById('shippedParcels').textContent = statusCounts.shipped;
+        document.getElementById('delayedParcels').textContent = statusCounts.delay;
+
+        // Status Chart
+        const ctx1 = document.getElementById('statusBarChart').getContext('2d');
+        if (statusChart) statusChart.destroy();
+        statusChart = new Chart(ctx1, {
+          type: 'bar',
+          data: {
+            labels: ['Stored','Pending','Shipped','Delay'],
+            datasets: [{
+              label: 'Parcels',
+              data: [statusCounts.stored,statusCounts.pending,statusCounts.shipped,statusCounts.delay],
+              backgroundColor: ['#3E5879','#5F749B','#7E94B5','#A0B3C9'],
+              borderRadius: 6
+            }]
+          },
+          options: { maintainAspectRatio: false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } }
+        });
+
+        // Size Chart
+        const ctx2 = document.getElementById('sizeBarChart').getContext('2d');
+        if (sizeChart) sizeChart.destroy();
+        sizeChart = new Chart(ctx2, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(sizeCounts),
+            datasets: [{
+              label: 'Parcels',
+              data: Object.values(sizeCounts),
+              backgroundColor: ['#3E5879','#5F749B','#7E94B5','#A0B3C9'],
+              borderRadius: 6
+            }]
+          },
+          options: { maintainAspectRatio: false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } }
+        });
+
+      } catch(e) { console.error('Error loading data', e); }
+    }
+
+    // PDF download
+    document.getElementById('downloadPDF').addEventListener('click', async () => {
+      const element = document.getElementById('reportContent');
+      const opt = {
+        margin: 0.5,
+        filename: 'Warehouse_Report.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 4, logging: true, useCORS: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      await html2pdf().set(opt).from(element).save();
+    });
+
+    document.addEventListener('DOMContentLoaded', fetchAndRender);
+  </script>
+</body>
+</html>
